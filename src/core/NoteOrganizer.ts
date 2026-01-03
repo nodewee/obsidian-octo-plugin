@@ -1,7 +1,6 @@
 import { App, TFile, Notice } from 'obsidian';
 import { StateController } from './StateController';
-import { APIClient } from './APIClient';
-import { OctoResponse, NoteContext } from '../types/index';
+import { OctoResponse } from '../types/index';
 import { i18n } from '../i18n/I18n';
 
 export class NoteOrganizer {

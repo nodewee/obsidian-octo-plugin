@@ -1,5 +1,5 @@
-import { App, Modal, Setting, TextAreaComponent, Notice } from 'obsidian';
-import { NoteContext, OctoResponse, ProviderConfig } from '../types/index';
+import { App, Modal, Setting } from 'obsidian';
+import { NoteContext } from '../types/index';
 import { APIClient } from '../core/APIClient';
 import { NoteOrganizer } from '../core/NoteOrganizer';
 import { StateController } from '../core/StateController';
@@ -42,8 +42,8 @@ export class DevModeModal extends Modal {
 				text.setValue(JSON.stringify(this.context, null, 2));
 				text.inputEl.rows = 10;
 				text.inputEl.readOnly = true;
-				text.inputEl.style.width = '100%';
-				text.inputEl.style.fontFamily = 'monospace';
+				text.inputEl.classList.add('octo-dev-textarea-full-width');
+				text.inputEl.classList.add('octo-dev-textarea-monospace');
 			});
 
 		new Setting(contentEl)
@@ -52,18 +52,18 @@ export class DevModeModal extends Modal {
 			.addTextArea(text => {
 				text.setValue(this.prompt);
 				text.inputEl.rows = 15;
-				text.inputEl.style.width = '100%';
-				text.inputEl.style.fontFamily = 'monospace';
+				text.inputEl.classList.add('octo-dev-textarea-full-width');
+				text.inputEl.classList.add('octo-dev-textarea-monospace');
 				text.onChange((value) => {
 					this.prompt = value;
 				});
 			});
 
 		this.statusEl = contentEl.createDiv({ cls: 'octo-dev-status' });
-		this.statusEl.style.display = 'none';
-		this.statusEl.style.padding = '12px';
-		this.statusEl.style.marginTop = '16px';
-		this.statusEl.style.borderRadius = '4px';
+		this.statusEl.classList.add('octo-dev-status-hidden');
+		this.statusEl.classList.add('octo-dev-status-padding');
+		this.statusEl.classList.add('octo-dev-status-margin');
+		this.statusEl.classList.add('octo-dev-status-radius');
 
 		new Setting(contentEl)
 			.setName(i18n.t('devMode.requestStatus.name'))
@@ -71,35 +71,35 @@ export class DevModeModal extends Modal {
 			.addExtraButton(button => button.setIcon('refresh').setTooltip('Refresh'));
 
 		this.responseEl = contentEl.createDiv({ cls: 'octo-dev-response' });
-		this.responseEl.style.display = 'none';
-		this.responseEl.style.padding = '12px';
-		this.responseEl.style.marginTop = '8px';
+		this.responseEl.classList.add('octo-dev-response-hidden');
+		this.responseEl.classList.add('octo-dev-response-padding');
+		this.responseEl.classList.add('octo-dev-response-margin');
 
 		const buttonContainer = contentEl.createDiv({ cls: 'octo-dev-modal-buttons' });
-		buttonContainer.style.display = 'flex';
-		buttonContainer.style.justifyContent = 'flex-end';
-		buttonContainer.style.gap = '10px';
-		buttonContainer.style.marginTop = '20px';
+		buttonContainer.classList.add('octo-dev-modal-buttons-flex');
+		buttonContainer.classList.add('octo-dev-modal-buttons-justify');
+		buttonContainer.classList.add('octo-dev-modal-buttons-gap');
+		buttonContainer.classList.add('octo-dev-modal-buttons-margin');
 
 		const cancelButton = buttonContainer.createEl('button', { text: 'Close' });
 		cancelButton.addEventListener('click', () => this.close());
 
 		this.sendButton = buttonContainer.createEl('button', { 
-			text: i18n.t('devMode.sending'),
+			text: i18n.t('devMode.send'),
 			cls: 'mod-cta'
 		});
 		this.sendButton.addEventListener('click', () => {
-			this.sendRequest();
+			void this.sendRequest();
 		});
 	}
 
 	private async sendRequest(): Promise<void> {
 		this.sendButton.disabled = true;
 		this.sendButton.textContent = i18n.t('devMode.sending');
-		this.statusEl.style.display = 'block';
+		this.statusEl.classList.remove('octo-dev-status-hidden');
 		this.statusEl.textContent = i18n.t('devMode.requestStatus.sending');
-		this.statusEl.style.backgroundColor = 'var(--background-modifier-info)';
-		this.responseEl.style.display = 'none';
+		this.statusEl.classList.add('octo-dev-status-info');
+		this.responseEl.classList.add('octo-dev-response-hidden');
 
 		try {
 			const settings = this.state.getSettings();
@@ -110,26 +110,31 @@ export class DevModeModal extends Modal {
 			const response = await apiClient.organizeNoteWithPrompt(this.context, this.prompt);
 			
 			this.statusEl.textContent = i18n.t('devMode.requestStatus.success');
-			this.statusEl.style.backgroundColor = 'var(--background-modifier-success)';
+			this.statusEl.classList.remove('octo-dev-status-info');
+			this.statusEl.classList.add('octo-dev-status-success');
 
-			this.responseEl.style.display = 'block';
-			this.responseEl.innerHTML = `
-				<h4 style="margin: 0 0 8px 0;">${i18n.t('devMode.response')}</h4>
-				<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(response, null, 2)}</pre>
-			`;
+			this.responseEl.classList.remove('octo-dev-response-hidden');
+			this.responseEl.empty();
+			this.responseEl.createEl('h4', { text: i18n.t('devMode.response'), cls: 'octo-dev-response-title' });
+			const responsePre = this.responseEl.createEl('pre', { cls: 'octo-dev-response-pre' });
+			responsePre.textContent = JSON.stringify(response, null, 2);
 
-			await noteOrganizer.organizeNoteWithResponse(this.file, response, this.context.content);
+			void noteOrganizer.organizeNoteWithResponse(this.file, response, this.context.content);
 			
 			this.sendButton.textContent = i18n.t('devMode.done');
-		} catch (error: any) {
-			this.statusEl.textContent = i18n.t('devMode.requestStatus.error', { error: error.message });
-			this.statusEl.style.backgroundColor = 'var(--background-modifier-error)';
+		} catch (error: unknown) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorStack = error instanceof Error ? error.stack : undefined;
 			
-			this.responseEl.style.display = 'block';
-			this.responseEl.innerHTML = `
-				<h4 style="margin: 0 0 8px 0;">${i18n.t('devMode.errorDetails')}</h4>
-				<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">${error.stack || error.message}</pre>
-			`;
+			this.statusEl.textContent = i18n.t('devMode.requestStatus.error', { error: errorMessage });
+			this.statusEl.classList.remove('octo-dev-status-info');
+			this.statusEl.classList.add('octo-dev-status-error');
+			
+			this.responseEl.classList.remove('octo-dev-response-hidden');
+			this.responseEl.empty();
+			this.responseEl.createEl('h4', { text: i18n.t('devMode.errorDetails'), cls: 'octo-dev-response-title' });
+			const errorPre = this.responseEl.createEl('pre', { cls: 'octo-dev-response-pre' });
+			errorPre.textContent = errorStack || errorMessage;
 			
 			this.sendButton.disabled = false;
 			this.sendButton.textContent = i18n.t('devMode.retry');

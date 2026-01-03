@@ -1,10 +1,124 @@
 import tseslint from 'typescript-eslint';
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
-import { globalIgnores } from "eslint/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import js from "@eslint/js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default tseslint.config(
 	{
+		ignores: [
+			"node_modules",
+			"dist",
+			"esbuild.config.mjs",
+			"version-bump.mjs",
+			"versions.json",
+			"main.js",
+			"eslint.config.mts",
+		],
+	},
+	js.configs.recommended,
+	tseslint.configs.recommendedTypeChecked,
+	{
+		files: ["**/*.ts"],
+		plugins: {
+			obsidianmd: obsidianmd,
+		},
+		rules: {
+			"no-unused-vars": "off",
+			"no-prototype-bultins": "off",
+			"no-self-compare": "warn",
+			"no-eval": "error",
+			"no-implied-eval": "error",
+			"prefer-const": "off",
+			"no-implicit-globals": "error",
+			"no-console": ["error", { allow: ["warn", "error", "debug"] }],
+			"no-restricted-globals": [
+				"error",
+				{
+					name: "app",
+					message: "Avoid using the global app object. Instead use the reference provided by your plugin instance.",
+				},
+				"warn",
+				{
+					name: "fetch",
+					message: "Use the built-in `requestUrl` function instead of `fetch` for network requests in Obsidian.",
+				},
+				{
+					name: "localStorage",
+					message: "Prefer `App#saveLocalStorage` / `App#loadLocalStorage` functions to write / read localStorage data that's unique to a vault."
+				}
+			],
+			"no-restricted-imports": [
+				"error",
+				{
+					name: "axios",
+					message: "Use the built-in `requestUrl` function instead of `axios`.",
+				},
+				{
+					name: "superagent",
+					message: "Use the built-in `requestUrl` function instead of `superagent`.",
+				},
+				{
+					name: "got",
+					message: "Use the built-in `requestUrl` function instead of `got`.",
+				},
+				{
+					name: "ofetch",
+					message: "Use the built-in `requestUrl` function instead of `ofetch`.",
+				},
+				{
+					name: "ky",
+					message: "Use the built-in `requestUrl` function instead of `ky`.",
+				},
+				{
+					name: "node-fetch",
+					message: "Use the built-in `requestUrl` function instead of `node-fetch`.",
+				},
+				{
+					name: "moment",
+					message: "The 'moment' package is bundled with Obsidian. Please import it from 'obsidian' instead.",
+				},
+			],
+			"no-alert": "error",
+			"no-undef": "error",
+			"@typescript-eslint/ban-ts-comment": "off",
+			"@typescript-eslint/no-deprecated": "error",
+			"@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
+			"@typescript-eslint/require-await": "off",
+			"@typescript-eslint/no-explicit-any": [
+				"error",
+				{ fixToUnknown: true },
+			],
+			"obsidianmd/commands/no-command-in-command-id": "error",
+			"obsidianmd/commands/no-command-in-command-name": "error",
+			"obsidianmd/commands/no-default-hotkeys": "error",
+			"obsidianmd/commands/no-plugin-id-in-command-id": "error",
+			"obsidianmd/commands/no-plugin-name-in-command-name": "error",
+			"obsidianmd/settings-tab/no-manual-html-headings": "error",
+			"obsidianmd/settings-tab/no-problematic-settings-headings": "error",
+			"obsidianmd/vault/iterate": "error",
+			"obsidianmd/detach-leaves": "error",
+			"obsidianmd/hardcoded-config-path": "error",
+			"obsidianmd/no-forbidden-elements": "error",
+			"obsidianmd/no-plugin-as-component": "error",
+			"obsidianmd/no-sample-code": "error",
+			"obsidianmd/no-tfile-tfolder-cast": "error",
+			"obsidianmd/no-view-references-in-plugin": "error",
+			"obsidianmd/no-static-styles-assignment": "error",
+			"obsidianmd/object-assign": "error",
+			"obsidianmd/platform": "error",
+			"obsidianmd/prefer-file-manager-trash-file": "warn",
+			"obsidianmd/prefer-abstract-input-suggest": "error",
+			"obsidianmd/regex-lookbehind": "error",
+			"obsidianmd/sample-names": "error",
+			"obsidianmd/validate-manifest": "error",
+			"obsidianmd/validate-license": ["error"],
+			"obsidianmd/ui/sentence-case": ["error", { enforceCamelCaseLower: true }],
+		},
 		languageOptions: {
 			globals: {
 				...globals.browser,
@@ -16,19 +130,9 @@ export default tseslint.config(
 						'manifest.json'
 					]
 				},
-				tsconfigRootDir: import.meta.dirname,
+				tsconfigRootDir: __dirname,
 				extraFileExtensions: ['.json']
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
-	globalIgnores([
-		"node_modules",
-		"dist",
-		"esbuild.config.mjs",
-		"eslint.config.js",
-		"version-bump.mjs",
-		"versions.json",
-		"main.js",
-	]),
 );

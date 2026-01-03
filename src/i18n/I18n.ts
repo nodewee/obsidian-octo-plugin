@@ -4,7 +4,7 @@ import zh from './zh.json';
 export type Language = 'en' | 'zh';
 
 interface TranslationData {
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 const translations: Record<Language, TranslationData> = {
@@ -38,11 +38,11 @@ class I18n {
 
 	t(key: string, params?: Record<string, string | number>): string {
 		const keys = key.split('.');
-		let value: any = translations[this.currentLanguage];
+		let value: unknown = translations[this.currentLanguage];
 
 		for (const k of keys) {
 			if (value && typeof value === 'object' && k in value) {
-				value = value[k];
+				value = (value as Record<string, unknown>)[k];
 			} else {
 				return key;
 			}
@@ -61,7 +61,7 @@ class I18n {
 
 	private interpolate(template: string, params: Record<string, string | number>): string {
 		return template.replace(/\{(\w+)\}/g, (match, key) => {
-			return key in params ? String(params[key]) : match;
+			return key in params ? String(params[key as keyof typeof params]) : match;
 		});
 	}
 }

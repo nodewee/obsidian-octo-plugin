@@ -1,5 +1,5 @@
 import { OctoResponse, NoteContext, ProviderConfig } from '../types/index';
-import { App } from 'obsidian';
+import { App, requestUrl } from 'obsidian';
 import DEFAULT_PROMPT from '../../prompts/default-prompt.md';
 
 export class APIClient {
@@ -24,7 +24,8 @@ export class APIClient {
 
 	async organizeNoteWithPrompt(context: NoteContext, prompt: string): Promise<OctoResponse> {
 		
-		const response = await fetch(`${this.baseUrl}/chat/completions`, {
+		const response = await requestUrl({
+			url: `${this.baseUrl}/chat/completions`,
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -47,22 +48,22 @@ export class APIClient {
 			})
 		});
 
-		if (!response.ok) {
-			throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+		if (response.status >= 400) {
+			throw new Error(`API request failed: ${response.status} ${response.text}`);
 		}
 
-		const data = await response.json();
+		const data = response.json as { choices: Array<{ message: { content: string } }> };
 		const content = data.choices[0].message.content;
 
 		return this.parseResponse(content);
 	}
 
-	private async getDefaultPrompt(): Promise<string> {
+	private getDefaultPrompt(): string {
 		return DEFAULT_PROMPT;
 	}
 
 	async buildPrompt(context: NoteContext): Promise<string> {
-		const promptTemplate = this.customPrompt || await this.getDefaultPrompt();
+		const promptTemplate = this.customPrompt || this.getDefaultPrompt();
 		
 		const filteredFolders = context.existingFolders
 			.filter(f => f !== '/')
@@ -85,11 +86,11 @@ export class APIClient {
 		}
 
 		try {
-			const parsed = JSON.parse(jsonMatch[0]);
+			const parsed = JSON.parse(jsonMatch[0]) as { title?: string; path?: string; tags?: unknown };
 			return {
 				title: parsed.title || '',
 				path: parsed.path || '',
-				tags: Array.isArray(parsed.tags) ? parsed.tags : []
+				tags: Array.isArray(parsed.tags) ? parsed.tags as string[] : []
 			};
 		} catch (error) {
 			throw new Error(`Failed to parse JSON response: ${error}`);

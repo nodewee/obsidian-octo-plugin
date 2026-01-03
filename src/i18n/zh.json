@@ -109,6 +109,7 @@
 		},
 		"response": "响应：",
 		"errorDetails": "错误详情：",
+		"send": "发送",
 		"sending": "发送中...",
 		"done": "完成",
 		"retry": "重试"

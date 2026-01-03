@@ -8,7 +8,7 @@ export class VaultScanner {
 		private state: StateController
 	) {}
 
-	async scanFolders(): Promise<string[]> {
+	scanFolders(): string[] {
 		const allFiles = this.app.vault.getAllLoadedFiles();
 		const folderSet = new Set<string>();
 

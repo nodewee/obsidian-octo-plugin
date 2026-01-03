@@ -14,7 +14,7 @@ class OctoPlugin extends Plugin {
 	private noteOrganizer: NoteOrganizer;
 
 	async onload() {
-		console.log('Loading Octo plugin...');
+		console.debug('Loading Octo plugin...');
 
 		this.state = new StateController();
 		this.vaultScanner = new VaultScanner(this.app, this.state);
@@ -26,7 +26,7 @@ class OctoPlugin extends Plugin {
 			id: 'organize-current-note',
 			name: i18n.t('commands.organizeCurrentNote'),
 			callback: () => {
-				this.organizeCurrentNote();
+				void this.organizeCurrentNote();
 			}
 		});
 
@@ -40,7 +40,7 @@ class OctoPlugin extends Plugin {
 						.setTitle(i18n.t('commands.organizeThisNote'))
 						.setIcon('octo')
 						.onClick(() => {
-							this.organizeCurrentNote();
+							void this.organizeCurrentNote();
 						});
 				});
 			})
@@ -48,15 +48,15 @@ class OctoPlugin extends Plugin {
 
 		this.addSettingTab(new OctoSettingTab(this.app, this, this.state));
 
-		console.log('Octo plugin loaded');
+		console.debug('Octo plugin loaded');
 	}
 
 	onunload() {
-		console.log('Unloading Octo plugin');
+		console.debug('Unloading Octo plugin');
 	}
 
 	async loadSettings() {
-		const savedData = await this.loadData();
+		const savedData = await this.loadData() as Partial<OctoSettings> | null;
 		if (savedData) {
 			this.state.loadSettings(savedData);
 		}
@@ -128,9 +128,10 @@ class OctoPlugin extends Plugin {
 
 			const response = await apiClient.organizeNoteWithPrompt(context, prompt);
 			await this.noteOrganizer.organizeNoteWithResponse(file, response, context.content);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Octo API Error:', error);
-			new Notice(i18n.t('notices.apiError', { error: error.message }));
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			new Notice(i18n.t('notices.apiError', { error: errorMessage }));
 		}
 	}
 }

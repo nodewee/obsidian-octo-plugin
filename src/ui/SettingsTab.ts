@@ -16,56 +16,69 @@ export class OctoSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: i18n.t('settings.title') });
+		new Setting(containerEl).setName("").setHeading();
 
 		const usageInfo = containerEl.createDiv({ cls: 'octo-usage-info' });
-		usageInfo.innerHTML = `
-			<div style="padding: 16px; background: var(--background-secondary); border-radius: 8px; margin-bottom: 20px;">
-				<p style="margin: 0; font-size: 0.9em; color: var(--text-muted);">${i18n.t('settings.usage.footer')}</p>
-				<br>
-				<p style="margin-bottom: 8px;"><strong>${i18n.t('settings.usage.entryPoints')}</strong></p>
-				<ul style="margin-left: 20px; margin-bottom: 8px;">
-					<li style="margin-bottom: 4px;">${i18n.t('settings.usage.hotkey')}</li>
-					<li style="margin-bottom: 4px;">${i18n.t('settings.usage.commandPalette', {
-						organizeCurrentNote: i18n.t('commands.organizeCurrentNote'),
-						organize: i18n.t('commands.organize')
-					})}</li>
-					<li style="margin-bottom: 4px;">${i18n.t('settings.usage.rightClickMenu', {
-						organizeThisNote: i18n.t('commands.organizeThisNote')
-					})}</li>
-				</ul>
-				<p style="margin-bottom: 8px;"><strong>${i18n.t('settings.usage.setHotkey')}</strong></p>
-				<p style="margin-left: 20px; margin-bottom: 8px;">${i18n.t('settings.usage.setHotkeyDesc', {
-					organizeCurrentNote: i18n.t('commands.organizeCurrentNote')
-				})}</p>
-			</div>
-		`;
+		const usageDiv = usageInfo.createDiv({ cls: 'octo-usage-div' });
 
-		containerEl.createEl('h3', { text: i18n.t('settings.apiConfig.title') });
+		const footerPara = usageDiv.createEl('p', { cls: 'octo-usage-footer' });
+		footerPara.textContent = i18n.t('settings.usage.footer');
+
+		usageDiv.createEl('br');
+
+		const entryPointsPara = usageDiv.createEl('p', { cls: 'octo-usage-entry-points' });
+		entryPointsPara.innerHTML = `<strong>${i18n.t('settings.usage.entryPoints')}</strong>`;
+
+		const entryPointsUl = usageDiv.createEl('ul', { cls: 'octo-usage-entry-points-ul' });
+
+		const hotkeyLi = entryPointsUl.createEl('li', { cls: 'octo-usage-entry-points-li' });
+		hotkeyLi.textContent = i18n.t('settings.usage.hotkey');
+
+		const commandPaletteLi = entryPointsUl.createEl('li', { cls: 'octo-usage-entry-points-li' });
+		commandPaletteLi.textContent = i18n.t('settings.usage.commandPalette', {
+			organizeCurrentNote: i18n.t('commands.organizeCurrentNote'),
+			organize: i18n.t('commands.organize')
+		});
+
+		const rightClickLi = entryPointsUl.createEl('li', { cls: 'octo-usage-entry-points-li' });
+		rightClickLi.textContent = i18n.t('settings.usage.rightClickMenu', {
+			organizeThisNote: i18n.t('commands.organizeThisNote')
+		});
+
+		const setHotkeyPara = usageDiv.createEl('p', { cls: 'octo-usage-set-hotkey' });
+		setHotkeyPara.innerHTML = `<strong>${i18n.t('settings.usage.setHotkey')}</strong>`;
+
+		const setHotkeyDescPara = usageDiv.createEl('p', { cls: 'octo-usage-set-hotkey-desc' });
+		setHotkeyDescPara.textContent = i18n.t('settings.usage.setHotkeyDesc', {
+			organizeCurrentNote: i18n.t('commands.organizeCurrentNote')
+		});
+
+		new Setting(containerEl).setName("").setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.apiProvider.name'))
 			.setDesc(i18n.t('settings.apiProvider.desc'))
 			.addDropdown(dropdown => dropdown
-				.addOption('DeepSeek', 'DeepSeek')
-				.addOption('OpenAI', 'OpenAI')
+				.addOption('DeepSeek', 'Deepseek')
+				.addOption('OpenAI', 'Openai')
 				.addOption('Kimi', 'Kimi')
 				.addOption('Custom', 'Custom')
 				.setValue(this.state.getSettings().apiProvider)
 				.onChange(async (value) => {
-					this.state.updateSettings({ apiProvider: value as any });
+					this.state.updateSettings({ apiProvider: value as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom' });
 					await this.plugin.saveSettings();
 					this.display();
 				}));
 
 		const currentProvider = this.state.getSettings().apiProvider;
 		const providerConfig = this.state.getSettings().providers[currentProvider];
+		const providerName: string = currentProvider === 'DeepSeek' ? 'deepseek' : currentProvider === 'OpenAI' ? 'openai' : currentProvider === 'Kimi' ? 'kimi' : currentProvider;
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.apiKey.name'))
-			.setDesc(i18n.t('settings.apiKey.desc', { provider: currentProvider }))
+			.setDesc(i18n.t('settings.apiKey.desc', { provider: providerName }))
 			.addText(text => text
-				.setPlaceholder('sk-...')
+				.setPlaceholder('Enter API key')
 				.setValue(providerConfig.apiKey)
 				.onChange(async (value) => {
 					const settings = this.state.getSettings();
@@ -100,7 +113,7 @@ export class OctoSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		containerEl.createEl('h3', { text: i18n.t('settings.automation.title') });
+		new Setting(containerEl).setName("").setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.devMode.name'))
@@ -127,7 +140,7 @@ export class OctoSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		containerEl.createEl('h3', { text: i18n.t('settings.aiPrompt.title') });
+		new Setting(containerEl).setName("").setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.customPrompt.name'))
@@ -152,14 +165,18 @@ export class OctoSettingTab extends PluginSettingTab {
 					this.display();
 				}));
 
-		containerEl.createEl('h3', { text: i18n.t('settings.cacheStatus.title') });
+		new Setting(containerEl).setName("").setHeading();
 
 		const cacheInfo = containerEl.createDiv({ cls: 'octo-cache-info' });
-		cacheInfo.innerHTML = `
-			<p><strong>${i18n.t('settings.cacheStatus.foldersCached')}</strong> ${this.state.getFolderCache().length}</p>
-			<p><strong>${i18n.t('settings.cacheStatus.tagsCached')}</strong> ${this.state.getTagCache().length}</p>
-			<p><strong>${i18n.t('settings.cacheStatus.cacheValid')}</strong> ${this.state.isCacheValid() ? 'Yes' : 'No'}</p>
-		`;
+
+		const foldersPara = cacheInfo.createEl('p');
+		foldersPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.foldersCached')}</strong> ${this.state.getFolderCache().length}`;
+
+		const tagsPara = cacheInfo.createEl('p');
+		tagsPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.tagsCached')}</strong> ${this.state.getTagCache().length}`;
+
+		const validPara = cacheInfo.createEl('p');
+		validPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.cacheValid')}</strong> ${this.state.isCacheValid() ? 'Yes' : 'No'}`;
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.refreshCache.name'))
@@ -173,7 +190,7 @@ export class OctoSettingTab extends PluginSettingTab {
 					this.display();
 				}));
 
-		containerEl.createEl('h3', { text: i18n.t('settings.language.name') });
+		new Setting(containerEl).setName("").setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t('settings.language.name'))
@@ -183,8 +200,8 @@ export class OctoSettingTab extends PluginSettingTab {
 				.addOption('zh', '中文')
 				.setValue(this.state.getSettings().language)
 				.onChange(async (value) => {
-					i18n.setLanguage(value as any);
-					this.state.updateSettings({ language: value as any });
+					i18n.setLanguage(value as 'en' | 'zh');
+					this.state.updateSettings({ language: value as 'en' | 'zh' });
 					await this.plugin.saveSettings();
 					this.display();
 				}));

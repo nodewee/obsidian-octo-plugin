@@ -8,13 +8,53 @@
   cursor: pointer;
 }
 
+.octo-dev-modal-buttons-flex {
+  display: flex;
+}
+
+.octo-dev-modal-buttons-justify {
+  justify-content: flex-end;
+}
+
+.octo-dev-modal-buttons-gap {
+  gap: 10px;
+}
+
+.octo-dev-modal-buttons-margin {
+  margin-top: 20px;
+}
+
 .octo-dev-status {
   font-size: 0.95em;
   line-height: 1.4;
 }
 
+.octo-dev-status-hidden {
+  display: none;
+}
+
+.octo-dev-status-padding {
+  padding: 12px;
+}
+
+.octo-dev-status-margin {
+  margin-top: 16px;
+}
+
+.octo-dev-status-radius {
+  border-radius: 4px;
+}
+
 .octo-dev-response {
   font-size: 0.9em;
+}
+
+.octo-dev-response-padding {
+  padding: 12px;
+}
+
+.octo-dev-response-margin {
+  margin-top: 8px;
 }
 
 .octo-dev-response pre {
@@ -47,4 +87,57 @@
 
 .octo-cache-info p {
   margin: 4px 0;
+}
+
+.octo-dev-textarea-full-width {
+  width: 100%;
+}
+
+.octo-dev-textarea-monospace {
+  font-family: var(--font-monospace);
+}
+
+.octo-dev-response-title {
+  margin: 0 0 8px 0;
+}
+
+.octo-dev-response-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.octo-usage-div {
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.octo-usage-footer {
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.octo-usage-entry-points {
+  margin-bottom: 8px;
+}
+
+.octo-usage-entry-points-ul {
+  margin-left: 20px;
+  margin-bottom: 8px;
+}
+
+.octo-usage-entry-points-li {
+  margin-bottom: 4px;
+}
+
+.octo-usage-set-hotkey {
+  margin-bottom: 8px;
+}
+
+.octo-usage-set-hotkey-desc {
+  margin-left: 20px;
+  margin-bottom: 8px;
 }

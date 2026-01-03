@@ -109,6 +109,7 @@
 		},
 		"response": "Response:",
 		"errorDetails": "Error Details:",
+		"send": "Send",
 		"sending": "Sending...",
 		"done": "Done",
 		"retry": "Retry"
