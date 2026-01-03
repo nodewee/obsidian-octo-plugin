@@ -1,67 +1,40 @@
 import { FolderFilterResult } from '../types/index';
 
 export class FolderFilter {
-	static filter(folders: string[], ignoredFolders: string[]): FolderFilterResult {
-		const result: FolderFilterResult = {
-			folders: [],
-			ignored: []
-		};
+	private readonly ignoredFolders: Set<string>;
+
+	constructor(ignoredFolders: string[] = []) {
+		this.ignoredFolders = new Set(ignoredFolders);
+	}
+
+	filterFolders(folders: string[]): FolderFilterResult {
+		const filteredFolders: string[] = [];
+		const ignoredFolders: string[] = [];
 
 		for (const folder of folders) {
-			if (folder === '/') {
-				result.ignored.push(folder);
-				continue;
-			}
-
-			if (this.shouldIgnore(folder, ignoredFolders)) {
-				result.ignored.push(folder);
+			if (this.isFolderIgnored(folder)) {
+				ignoredFolders.push(folder);
 			} else {
-				result.folders.push(folder);
+				filteredFolders.push(folder);
 			}
 		}
 
-		return result;
+		return {
+			folders: filteredFolders,
+			ignored: ignoredFolders
+		};
 	}
 
-	private static shouldIgnore(folder: string, ignoredFolders: string[]): boolean {
-		const normalizedFolder = folder.toLowerCase().replace(/^\//, '').replace(/\/$/, '');
-
-		for (const ignored of ignoredFolders) {
-			const normalizedIgnored = ignored.toLowerCase().trim();
-
-			if (normalizedIgnored === normalizedFolder) {
-				return true;
-			}
-
-			const folderParts = normalizedFolder.split('/');
-			const ignoredParts = normalizedIgnored.split('/');
-
-			if (this.matchesWordBoundary(folderParts, ignoredParts)) {
-				return true;
-			}
-		}
-
-		return false;
+	private isFolderIgnored(folder: string): boolean {
+		return this.ignoredFolders.has(folder) || this.isSubfolderOfIgnored(folder);
 	}
 
-	private static matchesWordBoundary(folderParts: string[], ignoredParts: string[]): boolean {
-		if (ignoredParts.length > folderParts.length) {
-			return false;
-		}
-
-		for (let i = 0; i <= folderParts.length - ignoredParts.length; i++) {
-			let match = true;
-			for (let j = 0; j < ignoredParts.length; j++) {
-				if (folderParts[i + j] !== ignoredParts[j]) {
-					match = false;
-					break;
-				}
-			}
-			if (match) {
+	private isSubfolderOfIgnored(folder: string): boolean {
+		for (const ignoredFolder of this.ignoredFolders) {
+			if (folder.startsWith(`${ignoredFolder}/`)) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 }

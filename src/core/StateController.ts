@@ -1,84 +1,108 @@
-import { OctoSettings } from '../types/index';
-import { i18n } from '../i18n/I18n';
+import { OctoSettings, ProviderConfig } from '../types/index';
+import { App } from 'obsidian';
+import DEFAULT_SETTINGS from '../settings/default-settings.json';
 
-const DEFAULT_SETTINGS: OctoSettings = {
-	apiProvider: 'DeepSeek',
-	providers: {
-		DeepSeek: { apiKey: '', modelName: 'deepseek-chat', baseUrl: 'https://api.deepseek.com' },
-		OpenAI: { apiKey: '', modelName: 'gpt-4o-mini', baseUrl: 'https://api.openai.com' },
-		Kimi: { apiKey: '', modelName: 'kimi-k2-turbo-preview', baseUrl: 'https://api.moonshot.cn' },
-		Custom: { apiKey: '', modelName: '', baseUrl: '' }
-	},
-	devMode: false,
-	ignoredFolders: [],
-	customPrompt: '',
-	language: i18n.getLanguage()
-};
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface CacheEntry<T> {
+	data: T;
+	timestamp: number;
+}
 
 export class StateController {
+	private readonly app: App;
 	private settings: OctoSettings;
-	private folderCache: string[] = [];
-	private tagCache: string[] = [];
-	private cacheTimestamp: number = 0;
-	private readonly CACHE_TTL = 60000;
+	private folderCache: CacheEntry<string[]>;
+	private tagCache: CacheEntry<string[]>;
 
-	constructor() {
-		this.settings = { ...DEFAULT_SETTINGS };
-	}
-
-	loadSettings(data: Partial<OctoSettings>): void {
-		this.settings = { ...DEFAULT_SETTINGS, ...data };
+	constructor(app: App) {
+		this.app = app;
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			apiProvider: DEFAULT_SETTINGS.apiProvider as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom',
+			language: DEFAULT_SETTINGS.language as 'en' | 'zh'
+		};
+		this.folderCache = { data: [], timestamp: 0 };
+		this.tagCache = { data: [], timestamp: 0 };
 	}
 
 	getSettings(): OctoSettings {
 		return { ...this.settings };
 	}
 
-	updateSettings(updates: Partial<OctoSettings>): void {
-		this.settings = { ...this.settings, ...updates };
+	updateSettings(data: Partial<OctoSettings>): void {
+		this.settings = { ...this.settings, ...data };
 	}
 
-	getCurrentProviderConfig() {
+	loadSettings(data: Partial<OctoSettings>): void {
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...data,
+			apiProvider: (data.apiProvider ?? DEFAULT_SETTINGS.apiProvider) as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom',
+			language: (data.language ?? DEFAULT_SETTINGS.language) as 'en' | 'zh'
+		};
+	}
+
+	isApiConfigured(): boolean {
+		const provider = this.settings.apiProvider;
+		const config = this.settings.providers[provider];
+		return Boolean(config?.apiKey && config?.apiKey.trim().length > 0);
+	}
+
+	isCacheValid(): boolean {
+		return this.isCacheEntryValid(this.folderCache) && this.isCacheEntryValid(this.tagCache);
+	}
+
+	getFolderCache(): string[] {
+		return [...this.folderCache.data];
+	}
+
+	getTagCache(): string[] {
+		return [...this.tagCache.data];
+	}
+
+	getCurrentProviderConfig(): ProviderConfig {
 		const provider = this.settings.apiProvider;
 		return this.settings.providers[provider];
 	}
 
-	setFolderCache(folders: string[]): void {
-		this.folderCache = folders;
-		this.cacheTimestamp = Date.now();
+	getIgnoredFolders(): string[] {
+		return [...this.settings.ignoredFolders];
 	}
 
-	getFolderCache(): string[] {
-		if (Date.now() - this.cacheTimestamp > this.CACHE_TTL) {
-			return [];
-		}
-		return [...this.folderCache];
+	updateIgnoredFolders(folders: string[]): void {
+		this.settings.ignoredFolders = folders;
+		this.folderCache = { data: [], timestamp: 0 };
 	}
 
-	setTagCache(tags: string[]): void {
-		this.tagCache = tags;
-		this.cacheTimestamp = Date.now();
+	getCachedFolders(): string[] | null {
+		return this.isCacheEntryValid(this.folderCache) ? [...this.folderCache.data] : null;
 	}
 
-	getTagCache(): string[] {
-		if (Date.now() - this.cacheTimestamp > this.CACHE_TTL) {
-			return [];
-		}
-		return [...this.tagCache];
+	setCachedFolders(folders: string[]): void {
+		this.folderCache = {
+			data: [...folders],
+			timestamp: Date.now()
+		};
+	}
+
+	getCachedTags(): string[] | null {
+		return this.isCacheEntryValid(this.tagCache) ? [...this.tagCache.data] : null;
+	}
+
+	setCachedTags(tags: string[]): void {
+		this.tagCache = {
+			data: [...tags],
+			timestamp: Date.now()
+		};
 	}
 
 	clearCache(): void {
-		this.folderCache = [];
-		this.tagCache = [];
-		this.cacheTimestamp = 0;
+		this.folderCache = { data: [], timestamp: 0 };
+		this.tagCache = { data: [], timestamp: 0 };
 	}
 
-	isCacheValid(): boolean {
-		return Date.now() - this.cacheTimestamp <= this.CACHE_TTL;
-	}
-
-	isApiConfigured(): boolean {
-		const providerConfig = this.getCurrentProviderConfig();
-		return !!(providerConfig && providerConfig.apiKey && providerConfig.apiKey.trim() !== '');
+	private isCacheEntryValid<T>(cache: CacheEntry<T>): boolean {
+		return Date.now() - cache.timestamp < CACHE_TTL_MS;
 	}
 }

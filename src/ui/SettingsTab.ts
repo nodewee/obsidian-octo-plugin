@@ -16,9 +16,18 @@ export class OctoSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("").setHeading();
+		this.renderUsageSection(containerEl);
+		this.renderApiProviderSection(containerEl);
+		this.renderDevModeSection(containerEl);
+		this.renderCustomPromptSection(containerEl);
+		this.renderCacheSection(containerEl);
+		this.renderLanguageSection(containerEl);
+	}
 
-		const usageInfo = containerEl.createDiv({ cls: 'octo-usage-info' });
+	private renderUsageSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
+
+		const usageInfo = container.createDiv({ cls: 'octo-usage-info' });
 		const usageDiv = usageInfo.createDiv({ cls: 'octo-usage-div' });
 
 		const footerPara = usageDiv.createEl('p', { cls: 'octo-usage-footer' });
@@ -27,7 +36,7 @@ export class OctoSettingTab extends PluginSettingTab {
 		usageDiv.createEl('br');
 
 		const entryPointsPara = usageDiv.createEl('p', { cls: 'octo-usage-entry-points' });
-		entryPointsPara.innerHTML = `<strong>${i18n.t('settings.usage.entryPoints')}</strong>`;
+		entryPointsPara.textContent = i18n.t('settings.usage.entryPoints');
 
 		const entryPointsUl = usageDiv.createEl('ul', { cls: 'octo-usage-entry-points-ul' });
 
@@ -46,16 +55,18 @@ export class OctoSettingTab extends PluginSettingTab {
 		});
 
 		const setHotkeyPara = usageDiv.createEl('p', { cls: 'octo-usage-set-hotkey' });
-		setHotkeyPara.innerHTML = `<strong>${i18n.t('settings.usage.setHotkey')}</strong>`;
+		setHotkeyPara.textContent = i18n.t('settings.usage.setHotkey');
 
 		const setHotkeyDescPara = usageDiv.createEl('p', { cls: 'octo-usage-set-hotkey-desc' });
 		setHotkeyDescPara.textContent = i18n.t('settings.usage.setHotkeyDesc', {
 			organizeCurrentNote: i18n.t('commands.organizeCurrentNote')
 		});
+	}
 
-		new Setting(containerEl).setName("").setHeading();
+	private renderApiProviderSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.apiProvider.name'))
 			.setDesc(i18n.t('settings.apiProvider.desc'))
 			.addDropdown(dropdown => dropdown
@@ -72,50 +83,108 @@ export class OctoSettingTab extends PluginSettingTab {
 
 		const currentProvider = this.state.getSettings().apiProvider;
 		const providerConfig = this.state.getSettings().providers[currentProvider];
-		const providerName: string = currentProvider === 'DeepSeek' ? 'deepseek' : currentProvider === 'OpenAI' ? 'openai' : currentProvider === 'Kimi' ? 'kimi' : currentProvider;
+		const providerName: string = this.getProviderDisplayName(currentProvider);
 
-		new Setting(containerEl)
+		this.renderApiKeySetting(container, currentProvider, providerName, providerConfig.apiKey);
+		this.renderModelNameSetting(container, currentProvider, providerConfig.modelName);
+		this.renderBaseUrlSetting(container, currentProvider, providerConfig.baseUrl);
+	}
+
+	private getProviderDisplayName(provider: string): string {
+		switch (provider) {
+			case 'DeepSeek':
+				return 'deepseek';
+			case 'OpenAI':
+				return 'openai';
+			case 'Kimi':
+				return 'kimi';
+			default:
+				return provider;
+		}
+	}
+
+	private renderApiKeySetting(container: HTMLElement, currentProvider: string, providerName: string, apiKey: string): void {
+		new Setting(container)
 			.setName(i18n.t('settings.apiKey.name'))
 			.setDesc(i18n.t('settings.apiKey.desc', { provider: providerName }))
 			.addText(text => text
 				.setPlaceholder('Enter API key')
-				.setValue(providerConfig.apiKey)
+				.setValue(apiKey)
 				.onChange(async (value) => {
 					const settings = this.state.getSettings();
-					settings.providers[currentProvider].apiKey = value;
+					const providerKey = currentProvider as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom';
+					settings.providers[providerKey].apiKey = value;
 					this.state.updateSettings(settings);
 					await this.plugin.saveSettings();
 				}));
+	}
 
-		new Setting(containerEl)
+	private renderModelNameSetting(container: HTMLElement, currentProvider: string, modelName: string): void {
+		const placeholder = this.getModelPlaceholder(currentProvider);
+		
+		new Setting(container)
 			.setName(i18n.t('settings.modelName.name'))
 			.setDesc(i18n.t('settings.modelName.desc', { provider: currentProvider }))
 			.addText(text => text
-				.setPlaceholder(currentProvider === 'DeepSeek' ? 'deepseek-chat' : currentProvider === 'OpenAI' ? 'gpt-4o-mini' : currentProvider === 'Kimi' ? 'kimi-k2-turbo-preview' : 'model-name')
-				.setValue(providerConfig.modelName)
+				.setPlaceholder(placeholder)
+				.setValue(modelName)
 				.onChange(async (value) => {
 					const settings = this.state.getSettings();
-					settings.providers[currentProvider].modelName = value;
+					const providerKey = currentProvider as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom';
+					settings.providers[providerKey].modelName = value;
 					this.state.updateSettings(settings);
 					await this.plugin.saveSettings();
 				}));
+	}
 
-		new Setting(containerEl)
+	private renderBaseUrlSetting(container: HTMLElement, currentProvider: string, baseUrl: string): void {
+		const placeholder = this.getBaseUrlPlaceholder(currentProvider);
+
+		new Setting(container)
 			.setName(i18n.t('settings.baseUrl.name'))
 			.setDesc(i18n.t('settings.baseUrl.desc', { provider: currentProvider }))
 			.addText(text => text
-				.setPlaceholder(currentProvider === 'DeepSeek' ? 'https://api.deepseek.com' : currentProvider === 'OpenAI' ? 'https://api.openai.com' : currentProvider === 'Kimi' ? 'https://api.moonshot.cn' : 'https://your-api-base')
-				.setValue(providerConfig.baseUrl)
+				.setPlaceholder(placeholder)
+				.setValue(baseUrl)
 				.onChange(async (value) => {
 					const settings = this.state.getSettings();
-					settings.providers[currentProvider].baseUrl = value;
+					const providerKey = currentProvider as 'DeepSeek' | 'OpenAI' | 'Kimi' | 'Custom';
+					settings.providers[providerKey].baseUrl = value;
 					this.state.updateSettings(settings);
 					await this.plugin.saveSettings();
 				}));
+	}
 
-		new Setting(containerEl).setName("").setHeading();
+	private getModelPlaceholder(provider: string): string {
+		switch (provider) {
+			case 'DeepSeek':
+				return 'deepseek-chat';
+			case 'OpenAI':
+				return 'gpt-4o-mini';
+			case 'Kimi':
+				return 'kimi-k2-turbo-preview';
+			default:
+				return 'model-name';
+		}
+	}
 
-		new Setting(containerEl)
+	private getBaseUrlPlaceholder(provider: string): string {
+		switch (provider) {
+			case 'DeepSeek':
+				return 'https://api.deepseek.com';
+			case 'OpenAI':
+				return 'https://api.openai.com';
+			case 'Kimi':
+				return 'https://api.moonshot.cn';
+			default:
+				return 'https://your-api-base';
+		}
+	}
+
+	private renderDevModeSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
+
+		new Setting(container)
 			.setName(i18n.t('settings.devMode.name'))
 			.setDesc(i18n.t('settings.devMode.desc'))
 			.addToggle(toggle => toggle
@@ -125,7 +194,7 @@ export class OctoSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.ignoredFolders.name'))
 			.setDesc(i18n.t('settings.ignoredFolders.desc'))
 			.addTextArea(text => text
@@ -139,10 +208,12 @@ export class OctoSettingTab extends PluginSettingTab {
 					this.state.updateSettings({ ignoredFolders: folders });
 					await this.plugin.saveSettings();
 				}));
+	}
 
-		new Setting(containerEl).setName("").setHeading();
+	private renderCustomPromptSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.customPrompt.name'))
 			.setDesc(i18n.t('settings.customPrompt.desc'))
 			.addTextArea(text => text
@@ -153,7 +224,7 @@ export class OctoSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.resetPrompt.name'))
 			.setDesc(i18n.t('settings.resetPrompt.desc'))
 			.addButton(button => button
@@ -164,21 +235,23 @@ export class OctoSettingTab extends PluginSettingTab {
 					new Notice(i18n.t('settings.resetPrompt.notice'));
 					this.display();
 				}));
+	}
 
-		new Setting(containerEl).setName("").setHeading();
+	private renderCacheSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
 
-		const cacheInfo = containerEl.createDiv({ cls: 'octo-cache-info' });
+		const cacheInfo = container.createDiv({ cls: 'octo-cache-info' });
 
 		const foldersPara = cacheInfo.createEl('p');
-		foldersPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.foldersCached')}</strong> ${this.state.getFolderCache().length}`;
+		foldersPara.textContent = `${i18n.t('settings.cacheStatus.foldersCached')} ${this.state.getFolderCache().length}`;
 
 		const tagsPara = cacheInfo.createEl('p');
-		tagsPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.tagsCached')}</strong> ${this.state.getTagCache().length}`;
+		tagsPara.textContent = `${i18n.t('settings.cacheStatus.tagsCached')} ${this.state.getTagCache().length}`;
 
 		const validPara = cacheInfo.createEl('p');
-		validPara.innerHTML = `<strong>${i18n.t('settings.cacheStatus.cacheValid')}</strong> ${this.state.isCacheValid() ? 'Yes' : 'No'}`;
+		validPara.textContent = `${i18n.t('settings.cacheStatus.cacheValid')} ${this.state.isCacheValid() ? 'Yes' : 'No'}`;
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.refreshCache.name'))
 			.setDesc(i18n.t('settings.refreshCache.desc'))
 			.addButton(button => button
@@ -189,10 +262,12 @@ export class OctoSettingTab extends PluginSettingTab {
 					new Notice(i18n.t('settings.refreshCache.notice'));
 					this.display();
 				}));
+	}
 
-		new Setting(containerEl).setName("").setHeading();
+	private renderLanguageSection(container: HTMLElement): void {
+		new Setting(container).setHeading();
 
-		new Setting(containerEl)
+		new Setting(container)
 			.setName(i18n.t('settings.language.name'))
 			.setDesc(i18n.t('settings.language.desc'))
 			.addDropdown(dropdown => dropdown

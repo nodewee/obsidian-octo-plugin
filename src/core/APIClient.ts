@@ -1,13 +1,27 @@
 import { OctoResponse, NoteContext, ProviderConfig } from '../types/index';
-import { App, requestUrl } from 'obsidian';
+import { App, requestUrl, RequestUrlParam, RequestUrlResponse } from 'obsidian';
 import DEFAULT_PROMPT from '../../prompts/default-prompt.md';
 
+interface APIResponse {
+	choices: Array<{
+		message: {
+			content: string;
+		};
+	}>;
+}
+
+interface ParsedResponse {
+	title?: string;
+	path?: string;
+	tags?: unknown;
+}
+
 export class APIClient {
-	private apiKey: string;
-	private baseUrl: string;
-	private model: string;
-	private customPrompt: string;
-	private app: App;
+	private readonly apiKey: string;
+	private readonly baseUrl: string;
+	private readonly model: string;
+	private readonly customPrompt: string;
+	private readonly app: App;
 
 	constructor(app: App, providerConfig: ProviderConfig, customPrompt: string = '') {
 		this.app = app;
@@ -23,39 +37,57 @@ export class APIClient {
 	}
 
 	async organizeNoteWithPrompt(context: NoteContext, prompt: string): Promise<OctoResponse> {
-		
-		const response = await requestUrl({
+		const requestBody = this.buildRequestBody(prompt, context.content);
+		const response = await this.sendAPIRequest(requestBody);
+		return this.parseResponse(response);
+	}
+
+	private buildRequestBody(prompt: string, content: string): Record<string, unknown> {
+		return {
+			model: this.model,
+			messages: [
+				{
+					role: 'system',
+					content: prompt
+				},
+				{
+					role: 'user',
+					content: content
+				}
+			],
+			temperature: 0.3,
+			stream: false
+		};
+	}
+
+	private async sendAPIRequest(body: Record<string, unknown>): Promise<string> {
+		const requestParams: RequestUrlParam = {
 			url: `${this.baseUrl}/chat/completions`,
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${this.apiKey}`
 			},
-			body: JSON.stringify({
-				model: this.model,
-				messages: [
-					{
-						role: 'system',
-						content: prompt
-					},
-					{
-						role: 'user',
-						content: context.content
-					}
-				],
-				temperature: 0.3,
-				stream: false
-			})
-		});
+			body: JSON.stringify(body)
+		};
 
+		const response = await requestUrl(requestParams);
+		this.validateResponseStatus(response);
+		return this.extractContentFromResponse(response);
+	}
+
+	private validateResponseStatus(response: RequestUrlResponse): void {
 		if (response.status >= 400) {
 			throw new Error(`API request failed: ${response.status} ${response.text}`);
 		}
+	}
 
-		const data = response.json as { choices: Array<{ message: { content: string } }> };
-		const content = data.choices[0].message.content;
-
-		return this.parseResponse(content);
+	private extractContentFromResponse(response: RequestUrlResponse): string {
+		const data = response.json as APIResponse;
+		if (!data.choices || data.choices.length === 0) {
+			throw new Error('No choices returned from API');
+		}
+		return data.choices[0].message.content;
 	}
 
 	private getDefaultPrompt(): string {
@@ -64,36 +96,54 @@ export class APIClient {
 
 	async buildPrompt(context: NoteContext): Promise<string> {
 		const promptTemplate = this.customPrompt || this.getDefaultPrompt();
-		
-		const filteredFolders = context.existingFolders
-			.filter(f => f !== '/')
-			.map(f => f.replace(/^\//, ''))
-			.join(', ');
-
-		const topTags = context.existingTags.slice(0, 20).join(', ');
+		const filteredFolders = this.formatFolders(context.existingFolders);
+		const topTags = this.formatTags(context.existingTags);
 
 		return promptTemplate
-			.replace(/\{\{folders\}\}/g, filteredFolders || '(none)')
-			.replace(/\{\{tags\}\}/g, topTags || '(none)')
+			.replace(/\{\{folders\}\}/g, filteredFolders)
+			.replace(/\{\{tags\}\}/g, topTags)
 			.replace(/\{\{currentTitle\}\}/g, context.currentTitle)
 			.replace(/\{\{currentPath\}\}/g, context.currentPath);
 	}
 
+	private formatFolders(folders: string[]): string {
+		return folders
+			.filter(f => f !== '/')
+			.map(f => f.replace(/^\//, ''))
+			.join(', ') || '(none)';
+	}
+
+	private formatTags(tags: string[]): string {
+		return tags.slice(0, 20).join(', ') || '(none)';
+	}
+
 	private parseResponse(content: string): OctoResponse {
+		const jsonMatch = this.extractJSONFromContent(content);
+		const parsed = this.parseJSONResponse(jsonMatch);
+		return this.normalizeResponse(parsed);
+	}
+
+	private extractJSONFromContent(content: string): string {
 		const jsonMatch = content.match(/\{[\s\S]*\}/);
 		if (!jsonMatch) {
 			throw new Error('No valid JSON found in response');
 		}
+		return jsonMatch[0];
+	}
 
+	private parseJSONResponse(jsonString: string): ParsedResponse {
 		try {
-			const parsed = JSON.parse(jsonMatch[0]) as { title?: string; path?: string; tags?: unknown };
-			return {
-				title: parsed.title || '',
-				path: parsed.path || '',
-				tags: Array.isArray(parsed.tags) ? parsed.tags as string[] : []
-			};
+			return JSON.parse(jsonString) as ParsedResponse;
 		} catch (error) {
 			throw new Error(`Failed to parse JSON response: ${error}`);
 		}
+	}
+
+	private normalizeResponse(parsed: ParsedResponse): OctoResponse {
+		return {
+			title: parsed.title || '',
+			path: parsed.path || '',
+			tags: Array.isArray(parsed.tags) ? parsed.tags as string[] : []
+		};
 	}
 }

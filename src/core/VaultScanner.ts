@@ -1,82 +1,64 @@
 import { App, TFile, TFolder } from 'obsidian';
-import { StateController } from './StateController';
-import { FolderFilter } from './FolderFilter';
 
 export class VaultScanner {
-	constructor(
-		private app: App,
-		private state: StateController
-	) {}
+	private readonly app: App;
+
+	constructor(app: App) {
+		this.app = app;
+	}
 
 	scanFolders(): string[] {
-		const allFiles = this.app.vault.getAllLoadedFiles();
-		const folderSet = new Set<string>();
-
-		for (const file of allFiles) {
-			if (file instanceof TFolder) {
-				if (file.path && file.path !== '/') {
-					folderSet.add(file.path);
-				}
-			}
-		}
-
-		const folders = Array.from(folderSet).sort();
-		this.state.setFolderCache(folders);
-		return folders;
+		const folders = new Set<string>();
+		this.collectFolders(this.app.vault.getRoot(), folders);
+		return Array.from(folders).sort();
 	}
 
 	async scanTags(): Promise<string[]> {
-		const files = this.app.vault.getMarkdownFiles();
-		const tagSet = new Set<string>();
+		const tags = new Set<string>();
+		const markdownFiles = this.app.vault.getMarkdownFiles();
 
-		for (const file of files) {
-			const cache = this.app.metadataCache.getFileCache(file);
-			if (cache?.tags) {
-				// cache.tags is an array of TagCache objects
-				for (const tagCache of cache.tags) {
-					tagSet.add(tagCache.tag);
-				}
-			}
-		}
+		const promises = markdownFiles.map(file => this.extractTagsFromFile(file, tags));
+		await Promise.all(promises);
 
-		const tags = Array.from(tagSet).sort();
-		this.state.setTagCache(tags);
-		return tags;
+		return Array.from(tags).sort();
 	}
 
-	async scanAll(): Promise<{ folders: string[]; tags: string[] }> {
-		const allFiles = this.app.vault.getAllLoadedFiles();
-		const folderSet = new Set<string>();
-		const tagSet = new Set<string>();
-
-		for (const file of allFiles) {
-			if (file instanceof TFolder) {
-				if (file.path && file.path !== '/') {
-					folderSet.add(file.path);
-				}
-			} else if (file instanceof TFile && file.extension === 'md') {
-				const cache = this.app.metadataCache.getFileCache(file);
-				if (cache?.tags) {
-					for (const tagCache of cache.tags) {
-						tagSet.add(tagCache.tag);
-					}
-				}
-			}
-		}
-
-		const folders = Array.from(folderSet).sort();
-		const tags = Array.from(tagSet).sort();
-
-		this.state.setFolderCache(folders);
-		this.state.setTagCache(tags);
-
-		return { folders, tags };
+	async scanAll(): Promise<void> {
+		this.scanFolders();
+		await this.scanTags();
 	}
 
-	getFilteredFolders(): string[] {
-		const allFolders = this.state.getFolderCache();
-		const settings = this.state.getSettings();
-		const result = FolderFilter.filter(allFolders, settings.ignoredFolders);
-		return result.folders;
+	private collectFolders(folder: TFolder, folderSet: Set<string>): void {
+		folderSet.add(folder.path);
+
+		for (const child of folder.children) {
+			if (child instanceof TFolder) {
+				this.collectFolders(child, folderSet);
+			}
+		}
+	}
+
+	private async extractTagsFromFile(file: TFile, tagSet: Set<string>): Promise<void> {
+		const content = await this.app.vault.cachedRead(file);
+		const tagRegex = /#([\w\u4e00-\u9fa5-]+)/g;
+		let match: RegExpExecArray | null;
+
+		while ((match = tagRegex.exec(content)) !== null) {
+			tagSet.add(match[1]);
+		}
+	}
+
+	getMarkdownFiles(): TFile[] {
+		return this.app.vault.getMarkdownFiles();
+	}
+
+	getFileByPath(path: string): TFile | null {
+		const file = this.app.vault.getFileByPath(path);
+		return file instanceof TFile ? file : null;
+	}
+
+	getFolderByPath(path: string): TFolder | null {
+		const folder = this.app.vault.getAbstractFileByPath(path);
+		return folder instanceof TFolder ? folder : null;
 	}
 }

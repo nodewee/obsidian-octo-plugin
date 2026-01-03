@@ -1,0 +1,29 @@
+{
+	"apiProvider": "DeepSeek",
+	"providers": {
+		"DeepSeek": {
+			"apiKey": "",
+			"modelName": "deepseek-chat",
+			"baseUrl": "https://api.deepseek.com"
+		},
+		"OpenAI": {
+			"apiKey": "",
+			"modelName": "gpt-4o-mini",
+			"baseUrl": "https://api.openai.com"
+		},
+		"Kimi": {
+			"apiKey": "",
+			"modelName": "kimi-k2-turbo-preview",
+			"baseUrl": "https://api.moonshot.cn"
+		},
+		"Custom": {
+			"apiKey": "",
+			"modelName": "",
+			"baseUrl": ""
+		}
+	},
+	"devMode": false,
+	"ignoredFolders": [],
+	"customPrompt": "",
+	"language": "en"
+}

@@ -1,68 +1,136 @@
-import { App, TFile, Notice } from 'obsidian';
-import { StateController } from './StateController';
 import { OctoResponse } from '../types/index';
-import { i18n } from '../i18n/I18n';
+import { App, TFile, TFolder, normalizePath, Notice } from 'obsidian';
 
 export class NoteOrganizer {
-	constructor(
-		private app: App,
-		private state: StateController
-	) {}
+	private readonly app: App;
 
-	async organizeNoteWithResponse(file: TFile, response: OctoResponse, content: string): Promise<TFile> {
-		return await this.applyOrganization(file, response, content);
+	constructor(app: App) {
+		this.app = app;
 	}
 
-	private async applyOrganization(
+	async applyOrganization(
 		file: TFile,
 		response: OctoResponse,
 		content: string
 	): Promise<TFile> {
-		const { title, path, tags } = response;
+		let updatedFile = file;
 
-		let targetPath = path;
-		if (!targetPath || targetPath === '/') {
-			targetPath = '';
+		if (response.title && response.title !== file.basename) {
+			updatedFile = await this.renameFile(updatedFile, response.title);
 		}
 
-		let filename = title || 'Untitled';
-		if (file.basename !== 'Untitled' && !this.isGenericTitle(file.basename)) {
-			filename = file.basename;
+		if (response.path && response.path !== updatedFile.parent?.path) {
+			updatedFile = await this.moveFile(updatedFile, response.path);
 		}
 
-		const timestamp = new Date().toISOString().slice(11, 16).replace(':', '');
-		let finalPath = targetPath ? `${targetPath}/${filename}.md` : `${filename}.md`;
-
-		const existingFile = this.app.vault.getAbstractFileByPath(finalPath);
-		if (existingFile && existingFile !== file) {
-			finalPath = targetPath 
-				? `${targetPath}/${filename}_${timestamp}.md`
-				: `${filename}_${timestamp}.md`;
+		if (response.tags && response.tags.length > 0) {
+			await this.updateTags(updatedFile, response.tags, content);
 		}
 
-		let finalContent = content;
+		return updatedFile;
+	}
 
-		if (tags.length > 0) {
-			const frontmatterLines: string[] = ['---'];
-			frontmatterLines.push(`tags: ${JSON.stringify(tags)}`);
-			frontmatterLines.push('---', '');
+	private async renameFile(file: TFile, newTitle: string): Promise<TFile> {
+		const parentFolder = file.parent;
+		if (!parentFolder) {
+			throw new Error('File has no parent folder');
+		}
 
-			if (!content.startsWith('---')) {
-				finalContent = frontmatterLines.join('\n') + content;
+		const newPath = normalizePath(`${parentFolder.path}/${newTitle}.md`);
+		const existingFile = this.app.vault.getFileByPath(newPath);
+
+		if (existingFile) {
+			throw new Error(`File already exists: ${newPath}`);
+		}
+
+		await this.app.vault.rename(file, newPath);
+		const renamedFile = this.app.vault.getFileByPath(newPath);
+
+		if (!renamedFile) {
+			throw new Error(`Failed to retrieve renamed file: ${newPath}`);
+		}
+
+		new Notice(`Renamed to: ${newTitle}`);
+		return renamedFile;
+	}
+
+	private async moveFile(file: TFile, targetPath: string): Promise<TFile> {
+		const normalizedTargetPath = normalizePath(targetPath);
+		const targetFolder = this.app.vault.getAbstractFileByPath(normalizedTargetPath);
+
+		if (!targetFolder) {
+			throw new Error(`Target folder not found: ${normalizedTargetPath}`);
+		}
+
+		if (!(targetFolder instanceof TFolder)) {
+			throw new Error(`Target path is not a folder: ${normalizedTargetPath}`);
+		}
+
+		const newPath = normalizePath(`${targetFolder.path}/${file.name}`);
+		const existingFile = this.app.vault.getFileByPath(newPath);
+
+		if (existingFile) {
+			throw new Error(`File already exists: ${newPath}`);
+		}
+
+		await this.app.vault.rename(file, newPath);
+		const movedFile = this.app.vault.getFileByPath(newPath);
+
+		if (!movedFile) {
+			throw new Error(`Failed to retrieve moved file: ${newPath}`);
+		}
+
+		new Notice(`Moved to: ${normalizedTargetPath}`);
+		return movedFile;
+	}
+
+	private async updateTags(file: TFile, tags: string[], content: string): Promise<void> {
+		const existingTags = this.extractTags(content);
+		const tagsToAdd = tags.filter(tag => !existingTags.has(tag));
+
+		if (tagsToAdd.length === 0) {
+			return;
+		}
+
+		const tagString = tagsToAdd.map(tag => `#${tag}`).join(' ');
+		const updatedContent = this.insertTags(content, tagString);
+
+		await this.app.vault.modify(file, updatedContent);
+		new Notice(`Added tags: ${tagsToAdd.join(', ')}`);
+	}
+
+	private extractTags(content: string): Set<string> {
+		const tagRegex = /#([\w\u4e00-\u9fa5-]+)/g;
+		const tags = new Set<string>();
+		let match: RegExpExecArray | null;
+
+		while ((match = tagRegex.exec(content)) !== null) {
+			tags.add(match[1]);
+		}
+
+		return tags;
+	}
+
+	private insertTags(content: string, tagString: string): string {
+		const lines = content.split('\n');
+		const yamlEndIndex = this.findYamlEndIndex(lines);
+		const insertIndex = yamlEndIndex >= 0 ? yamlEndIndex + 1 : 0;
+
+		lines.splice(insertIndex, 0, '', tagString, '');
+		return lines.join('\n');
+	}
+
+	private findYamlEndIndex(lines: string[]): number {
+		if (lines.length === 0 || !lines[0].trim().startsWith('---')) {
+			return -1;
+		}
+
+		for (let i = 1; i < lines.length; i++) {
+			if (lines[i].trim() === '---') {
+				return i;
 			}
 		}
 
-		if (file.path !== finalPath) {
-			await this.app.fileManager.renameFile(file, finalPath);
-		}
-		await this.app.vault.modify(file, finalContent);
-		new Notice(i18n.t('notices.success', { path: finalPath }));
-		return file;
-	}
-
-	private isGenericTitle(title: string): boolean {
-		const genericPatterns = ['untitled', 'new note', 'note', '无标题', '新建笔记'];
-		const lowerTitle = title.toLowerCase();
-		return genericPatterns.some(pattern => lowerTitle.includes(pattern));
+		return -1;
 	}
 }

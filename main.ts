@@ -16,9 +16,9 @@ class OctoPlugin extends Plugin {
 	async onload() {
 		console.debug('Loading Octo plugin...');
 
-		this.state = new StateController();
-		this.vaultScanner = new VaultScanner(this.app, this.state);
-		this.noteOrganizer = new NoteOrganizer(this.app, this.state);
+		this.state = new StateController(this.app);
+		this.vaultScanner = new VaultScanner(this.app);
+		this.noteOrganizer = new NoteOrganizer(this.app);
 
 		await this.loadSettings();
 
@@ -127,7 +127,7 @@ class OctoPlugin extends Plugin {
 			new Notice(i18n.t('notices.waitingForWisdom'));
 
 			const response = await apiClient.organizeNoteWithPrompt(context, prompt);
-			await this.noteOrganizer.organizeNoteWithResponse(file, response, context.content);
+			await this.noteOrganizer.applyOrganization(file, response, context.content);
 		} catch (error: unknown) {
 			console.error('Octo API Error:', error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
