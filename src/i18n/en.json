@@ -1,0 +1,116 @@
+{
+	"plugin": {
+		"name": "Octo",
+		"description": "Zero effort naming, tagging, and filing your Notes with AI."
+	},
+	"settings": {
+		"title": "Octo Settings",
+		"usage": {
+			"title": "How to Use",
+			"entryPoints": "Entry Points:",
+			"hotkey": "Hotkey: Set custom hotkey in settings to quickly organize current note",
+			"commandPalette": "Command Palette: Press Cmd/Ctrl + P, type \"{organizeCurrentNote}\" or \"{organize}\"",
+			"rightClickMenu": "Right-click Menu: Right-click any note in file explorer, select \"{organizeThisNote}\"",
+			"setHotkey": "Set Hotkey:",
+			"setHotkeyDesc": "Open Settings → Hotkeys, search \"Octo\" or \"{organizeCurrentNote}\", click the \"+\" button to set custom hotkey.",
+			"footer": "Octo uses AI to analyze note content, automatically write titles, add tags, and archive to appropriate folder paths."
+		},
+		"apiProvider": {
+			"name": "API Provider",
+			"desc": "Select your AI service provider"
+		},
+		"apiKey": {
+			"name": "API Key",
+			"desc": "API key for {provider}"
+		},
+		"modelName": {
+			"name": "Model Name",
+			"desc": "AI model name for {provider}"
+		},
+		"baseUrl": {
+			"name": "Base URL",
+			"desc": "API base URL for {provider}"
+		},
+		"apiConfig": {
+			"title": "API Configuration"
+		},
+		"automation": {
+			"title": "Automation"
+		},
+		"devMode": {
+			"name": "Dev Mode",
+			"desc": "Preview API requests before sending"
+		},
+		"ignoredFolders": {
+			"name": "Ignored Folders",
+			"desc": "Folders to exclude (comma-separated, word matching)",
+			"placeholder": "archive, templates, .obsidian"
+		},
+		"aiPrompt": {
+			"title": "AI Prompt"
+		},
+		"customPrompt": {
+			"name": "Custom Prompt",
+			"desc": "Customize the AI prompt template. Leave empty to use default. Available placeholders: {{folders}}, {{tags}}, {{currentTitle}}, {{currentPath}}",
+			"placeholder": "Leave empty to use default prompt"
+		},
+		"resetPrompt": {
+			"name": "Reset to Default",
+			"desc": "Clear custom prompt and use the default one",
+			"button": "Reset",
+			"notice": "Custom prompt reset to default"
+		},
+		"cacheStatus": {
+			"title": "Cache Status",
+			"foldersCached": "Folders cached:",
+			"tagsCached": "Tags cached:",
+			"cacheValid": "Cache valid:"
+		},
+		"refreshCache": {
+			"name": "Refresh Cache",
+			"desc": "Manually refresh folder and tag cache",
+			"button": "Refresh",
+			"notice": "Cache cleared. Will refresh on next operation."
+		},
+		"language": {
+			"name": "Language",
+			"desc": "Select your preferred language"
+		}
+	},
+	"commands": {
+		"organizeCurrentNote": "Organize current note",
+		"organizeThisNote": "Octo: Organize this note",
+		"organize": "Organize"
+	},
+	"notices": {
+		"pleaseConfigureApiKey": "Please configure your API key in Octo settings",
+		"noActiveNote": "No active note to organize",
+		"waitingForWisdom": "Waiting for Octo's wisdom...",
+		"failedToStart": "Failed to start organization. Check console for details.",
+		"apiError": "API Error: {error}",
+		"success": "Success: Note filed to {path}"
+	},
+	"devMode": {
+		"title": "Octo Dev Mode: Preview Request",
+		"currentNoteContext": {
+			"name": "Current Note Context",
+			"desc": "Content and metadata that will be sent to API"
+		},
+		"systemPrompt": {
+			"name": "System Prompt",
+			"desc": "You can modify the prompt before sending"
+		},
+		"requestStatus": {
+			"name": "Request Status",
+			"desc": "API request status and response",
+			"sending": "Sending request to API...",
+			"success": "Request completed successfully!",
+			"error": "Error: {error}"
+		},
+		"response": "Response:",
+		"errorDetails": "Error Details:",
+		"sending": "Sending...",
+		"done": "Done",
+		"retry": "Retry"
+	}
+}

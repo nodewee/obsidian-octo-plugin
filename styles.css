@@ -1,8 +1,50 @@
-/*
+.octo-dev-modal {
+  max-width: 900px;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.octo-dev-modal-buttons button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-If your plugin does not need CSS, delete this file.
+.octo-dev-status {
+  font-size: 0.95em;
+  line-height: 1.4;
+}
 
-*/
+.octo-dev-response {
+  font-size: 0.9em;
+}
+
+.octo-dev-response pre {
+  background-color: var(--background-primary-alt);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+.octo-dev-response h4 {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.octo-suggestion-preview {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+
+.octo-cache-info {
+  padding: 12px;
+  background-color: var(--background-secondary);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.octo-cache-info p {
+  margin: 4px 0;
+}

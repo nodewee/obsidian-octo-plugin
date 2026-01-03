@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "octo",
+	"name": "Octo",
+	"version": "0.1.5",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Zero effort naming, tagging, and filing your Notes with AI.",
+	"author": "HenryZ",
+	"authorUrl": "https://github.com/nodewee",
+	"fundingUrl": "https://github.com/nodewee/obsidian-octo-plugin",
 	"isDesktopOnly": false
 }

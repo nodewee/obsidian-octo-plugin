@@ -1,0 +1,116 @@
+{
+	"plugin": {
+		"name": "Octo",
+		"description": "使用 AI 零成本命名、标记和整理您的笔记。"
+	},
+	"settings": {
+		"title": "Octo 设置",
+		"usage": {
+			"title": "使用方法",
+			"entryPoints": "功能入口：",
+			"hotkey": "⌨️ 快捷键：可在设置中自定义快捷键，快速整理当前笔记",
+			"commandPalette": "📝 命令面板：按 Cmd/Ctrl + P，输入 \"{organizeCurrentNote}\" 或 \"{organize}\"",
+			"rightClickMenu": "🖱️ 右键菜单：在文件浏览器中右键点击任意笔记，选择 \"{organizeThisNote}\"",
+			"setHotkey": "设置快捷键：",
+			"setHotkeyDesc": "打开 设置 → 快捷键，搜索 \"Octo\" 或 \"{organizeCurrentNote}\"，点击右侧的 \"+\" 按钮设置自定义快捷键。",
+			"footer": "Octo 会使用 AI 分析笔记内容，自动撰写标题、添加标签，并归档到合适的文件夹路径。"
+		},
+		"apiProvider": {
+			"name": "API 提供商",
+			"desc": "选择您的 AI 服务提供商"
+		},
+		"apiKey": {
+			"name": "API 密钥",
+			"desc": "{provider} 的 API 密钥"
+		},
+		"modelName": {
+			"name": "模型名称",
+			"desc": "{provider} 的 AI 模型名称"
+		},
+		"baseUrl": {
+			"name": "基础 URL",
+			"desc": "{provider} 的 API 基础 URL"
+		},
+		"apiConfig": {
+			"title": "API 配置"
+		},
+		"automation": {
+			"title": "自动化"
+		},
+		"devMode": {
+			"name": "开发模式",
+			"desc": "在发送前预览 API 请求"
+		},
+		"ignoredFolders": {
+			"name": "忽略的文件夹",
+			"desc": "要排除的文件夹（逗号分隔，单词匹配）",
+			"placeholder": "archive, templates, .obsidian"
+		},
+		"aiPrompt": {
+			"title": "AI 提示词"
+		},
+		"customPrompt": {
+			"name": "自定义提示词",
+			"desc": "自定义 AI 提示词模板。留空使用默认值。可用占位符：{{folders}}, {{tags}}, {{currentTitle}}, {{currentPath}}",
+			"placeholder": "留空使用默认提示词"
+		},
+		"resetPrompt": {
+			"name": "重置为默认",
+			"desc": "清除自定义提示词并使用默认提示词",
+			"button": "重置",
+			"notice": "自定义提示词已重置为默认值"
+		},
+		"cacheStatus": {
+			"title": "缓存状态",
+			"foldersCached": "已缓存文件夹：",
+			"tagsCached": "已缓存标签：",
+			"cacheValid": "缓存有效："
+		},
+		"refreshCache": {
+			"name": "刷新缓存",
+			"desc": "手动刷新文件夹和标签缓存",
+			"button": "刷新",
+			"notice": "缓存已清除。下次操作时将刷新。"
+		},
+		"language": {
+			"name": "语言",
+			"desc": "选择您的首选语言"
+		}
+	},
+	"commands": {
+		"organizeCurrentNote": "整理当前笔记",
+		"organizeThisNote": "Octo: 整理此笔记",
+		"organize": "整理"
+	},
+	"notices": {
+		"pleaseConfigureApiKey": "请在 Octo 设置中配置您的 API 密钥",
+		"noActiveNote": "没有活动笔记可整理",
+		"waitingForWisdom": "等待 Octo 的智慧...",
+		"failedToStart": "启动整理失败。请查看控制台了解详情。",
+		"apiError": "API 错误：{error}",
+		"success": "成功：笔记已归档到 {path}"
+	},
+	"devMode": {
+		"title": "Octo 开发模式：预览请求",
+		"currentNoteContext": {
+			"name": "当前笔记上下文",
+			"desc": "将发送到 API 的内容和元数据"
+		},
+		"systemPrompt": {
+			"name": "系统提示词",
+			"desc": "您可以在发送前修改提示词"
+		},
+		"requestStatus": {
+			"name": "请求状态",
+			"desc": "API 请求状态和响应",
+			"sending": "正在发送请求到 API...",
+			"success": "请求成功完成！",
+			"error": "错误：{error}"
+		},
+		"response": "响应：",
+		"errorDetails": "错误详情：",
+		"sending": "发送中...",
+		"done": "完成",
+		"retry": "重试"
+	}
+}

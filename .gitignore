@@ -1,22 +1,54 @@
-# vscode
-.vscode 
-
-# Intellij
-*.iml
-.idea
-
-# npm
-node_modules
-
-# Don't include the compiled main.js file in the repo.
-# They should be uploaded to GitHub releases instead.
+# This Project
+deploy.sh
 main.js
 
-# Exclude sourcemaps
-*.map
+# Dependencies
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+.turbo/
+.cache/
+coverage/
+*.tsbuildinfo
 
-# obsidian
-data.json
+# Build outputs & Release artifacts
+dist/
+build/
+_deployment/
+_released/
+_release/
 
-# Exclude macOS Finder (System Explorer) View States
+# Cloudflare Wrangler
+.wrangler/
+backend/.wrangler/
+# .dev.vars
+# secrets for production deployment
+backend/.prod.secrets.json
+
+# Env files (never commit secrets)
+.env
+.env.*
+# **/.env
+# **/.env.*
+
+
+# IDE & OS
 .DS_Store
+.vscode/
+.idea/
+*.code-workspace
+.trae/
+.agent/
+
+# Certificates
+certs/*
+!certs/README.md
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Test artifacts
+*.lcov
+**/.nyc_output/
