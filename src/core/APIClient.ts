@@ -32,7 +32,7 @@ export class APIClient {
 	}
 
 	async organizeNote(context: NoteContext): Promise<OctoResponse> {
-		const prompt = await this.buildPrompt(context);
+		const prompt = this.buildPrompt(context);
 		return this.organizeNoteWithPrompt(context, prompt);
 	}
 
@@ -94,7 +94,7 @@ export class APIClient {
 		return DEFAULT_PROMPT;
 	}
 
-	async buildPrompt(context: NoteContext): Promise<string> {
+	buildPrompt(context: NoteContext): string {
 		const promptTemplate = this.customPrompt || this.getDefaultPrompt();
 		const filteredFolders = this.formatFolders(context.existingFolders);
 		const topTags = this.formatTags(context.existingTags);

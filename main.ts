@@ -99,7 +99,7 @@ class OctoPlugin extends Plugin {
 			const settings = this.state.getSettings();
 			const providerConfig = this.state.getCurrentProviderConfig();
 			const apiClient = new APIClient(this.app, providerConfig, settings.customPrompt);
-			const prompt = await apiClient.buildPrompt(context);
+			const prompt = apiClient.buildPrompt(context);
 
 			if (settings.devMode) {
 				new DevModeModal(

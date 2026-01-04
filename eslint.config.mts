@@ -88,7 +88,7 @@ export default tseslint.config(
 			"@typescript-eslint/ban-ts-comment": "off",
 			"@typescript-eslint/no-deprecated": "error",
 			"@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
-			"@typescript-eslint/require-await": "off",
+			"@typescript-eslint/require-await": "warn",
 			"@typescript-eslint/no-explicit-any": [
 				"error",
 				{ fixToUnknown: true },
