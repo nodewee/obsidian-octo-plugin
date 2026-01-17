@@ -1,7 +1,7 @@
 {
 	"id": "octo",
 	"name": "Octo",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"minAppVersion": "0.15.0",
 	"description": "Zero effort naming, tagging, and filing your Notes with AI.",
 	"author": "HenryZ",

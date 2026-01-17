@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-01-17
+
 ### Added
-- Initial release features
-- AI-powered note organization
-- Automatic title generation
-- Folder and tag suggestions
-- Dev mode for debugging
-- Folder filtering with word-boundary matching
-- Cache management for folders and tags
+- Wildcard pattern matching for folder filtering (supports * and **)
+- Comprehensive test cases covering various matching scenarios
+
+### Changed
+- Optimized cache mechanism by converting async scanning to sync operations for better performance
+- Improved folder filter path matching logic with case-insensitive support
+- Optimized file movement and tag update logic using Obsidian native APIs
+- Refactored prompt template with improved path display format
+- Updated settings UI to support multi-line input format for folder ignore patterns
 
 ## [0.1.5] - 2026-01-03
 
@@ -25,5 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings UI for configuration
 - Dev mode modal for prompt preview
 
-[Unreleased]: https://github.com/nodewee/obsidian-octo-plugin/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/nodewee/obsidian-octo-plugin/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/nodewee/obsidian-octo-plugin/releases/tag/v0.1.6
 [0.1.5]: https://github.com/nodewee/obsidian-octo-plugin/releases/tag/v0.1.5
