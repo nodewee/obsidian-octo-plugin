@@ -1,5 +1,5 @@
 import { OctoResponse } from '../types/index';
-import { App, TFile, TFolder, normalizePath, Notice } from 'obsidian';
+import { App, TFile, normalizePath, Notice } from 'obsidian';
 
 export class NoteOrganizer {
 	private readonly app: App;

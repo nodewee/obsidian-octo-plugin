@@ -2,6 +2,7 @@ import { Plugin, Notice, TFile } from 'obsidian';
 import { StateController } from './src/core/StateController';
 import { VaultScanner } from './src/core/VaultScanner';
 import { NoteOrganizer } from './src/core/NoteOrganizer';
+import { FolderFilter } from './src/core/FolderFilter';
 import { APIClient } from './src/core/APIClient';
 import { OctoSettingTab } from './src/ui/SettingsTab';
 import { DevModeModal } from './src/ui/DevModeModal';
@@ -68,9 +69,12 @@ class OctoPlugin extends Plugin {
 
 	private ensureCache(): void {
 		if (!this.state.isCacheValid()) {
-			const folders = this.vaultScanner.scanFolders();
+			const allFolders = this.vaultScanner.scanFolders();
 			const tags = this.vaultScanner.scanTags();
-			this.state.setCachedFolders(folders);
+			const ignoredFolders = this.state.getIgnoredFolders();
+			const folderFilter = new FolderFilter(ignoredFolders);
+			const filteredResult = folderFilter.filterFolders(allFolders);
+			this.state.setCachedFolders(filteredResult.folders);
 			this.state.setCachedTags(tags);
 		}
 	}

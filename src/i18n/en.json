@@ -43,8 +43,8 @@
 		},
 		"ignoredFolders": {
 			"name": "Ignored Folders",
-			"desc": "Folders to exclude (comma-separated, word matching)",
-			"placeholder": "archive, templates, .obsidian"
+			"desc": "Folders to exclude (one per line, supports wildcards * and **)",
+			"placeholder": "archive\ntemplates\n.obsidian\n*/attachments\n**/temp"
 		},
 		"aiPrompt": {
 			"title": "AI Prompt"

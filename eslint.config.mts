@@ -18,6 +18,7 @@ export default tseslint.config(
 			"versions.json",
 			"main.js",
 			"eslint.config.mts",
+			"tests",
 		],
 	},
 	js.configs.recommended,

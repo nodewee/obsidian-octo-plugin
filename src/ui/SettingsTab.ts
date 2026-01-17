@@ -199,13 +199,13 @@ export class OctoSettingTab extends PluginSettingTab {
 			.setDesc(i18n.t('settings.ignoredFolders.desc'))
 			.addTextArea(text => text
 				.setPlaceholder(i18n.t('settings.ignoredFolders.placeholder'))
-				.setValue(this.state.getSettings().ignoredFolders.join(', '))
+				.setValue(this.state.getSettings().ignoredFolders.join('\n'))
 				.onChange(async (value) => {
 					const folders = value
-						.split(',')
+						.split('\n')
 						.map(f => f.trim())
 						.filter(f => f.length > 0);
-					this.state.updateSettings({ ignoredFolders: folders });
+					this.state.updateIgnoredFolders(folders);
 					await this.plugin.saveSettings();
 				}));
 	}

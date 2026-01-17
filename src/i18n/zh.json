@@ -43,8 +43,8 @@
 		},
 		"ignoredFolders": {
 			"name": "忽略的文件夹",
-			"desc": "要排除的文件夹（逗号分隔，单词匹配）",
-			"placeholder": "archive, templates, .obsidian"
+			"desc": "要排除的文件夹（每行一个，支持通配符 * 和 **）",
+			"placeholder": "archive\ntemplates\n.obsidian\n*/attachments\n**/temp"
 		},
 		"aiPrompt": {
 			"title": "AI 提示词"
