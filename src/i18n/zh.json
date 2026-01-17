@@ -60,15 +60,11 @@
 			"button": "重置",
 			"notice": "自定义提示词已重置为默认值"
 		},
-		"cacheStatus": {
-			"title": "缓存状态",
-			"foldersCached": "已缓存文件夹：",
-			"tagsCached": "已缓存标签：",
-			"cacheValid": "缓存有效："
-		},
 		"refreshCache": {
 			"name": "刷新缓存",
-			"desc": "手动刷新文件夹和标签缓存",
+			"cacheStatus": "文件夹：{folders}，标签：{tags}，状态：{valid}",
+			"valid": "有效",
+			"invalid": "无效",
 			"button": "刷新",
 			"notice": "缓存已清除。下次操作时将刷新。"
 		},

@@ -78,17 +78,6 @@
   margin-top: 4px;
 }
 
-.octo-cache-info {
-  padding: 12px;
-  background-color: var(--background-secondary);
-  border-radius: 4px;
-  margin-bottom: 16px;
-}
-
-.octo-cache-info p {
-  margin: 4px 0;
-}
-
 .octo-dev-textarea-full-width {
   width: 100%;
 }

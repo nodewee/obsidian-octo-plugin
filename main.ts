@@ -66,9 +66,12 @@ class OctoPlugin extends Plugin {
 		await this.saveData(this.state.getSettings());
 	}
 
-	private async ensureCache(): Promise<void> {
+	private ensureCache(): void {
 		if (!this.state.isCacheValid()) {
-			await this.vaultScanner.scanAll();
+			const folders = this.vaultScanner.scanFolders();
+			const tags = this.vaultScanner.scanTags();
+			this.state.setCachedFolders(folders);
+			this.state.setCachedTags(tags);
 		}
 	}
 
@@ -79,7 +82,7 @@ class OctoPlugin extends Plugin {
 				return;
 			}
 
-			await this.ensureCache();
+			this.ensureCache();
 
 			const activeFile = this.app.workspace.getActiveFile();
 			if (!activeFile) {

@@ -10,22 +10,30 @@ export class VaultScanner {
 	scanFolders(): string[] {
 		const folders = new Set<string>();
 		this.collectFolders(this.app.vault.getRoot(), folders);
-		return Array.from(folders).sort();
+		return Array.from(folders)
+			.filter(f => f !== '/')
+			.sort();
 	}
 
-	async scanTags(): Promise<string[]> {
+	scanTags(): string[] {
 		const tags = new Set<string>();
 		const markdownFiles = this.app.vault.getMarkdownFiles();
 
-		const promises = markdownFiles.map(file => this.extractTagsFromFile(file, tags));
-		await Promise.all(promises);
+		for (const file of markdownFiles) {
+			const fileCache = this.app.metadataCache.getFileCache(file);
+			if (fileCache?.tags) {
+				for (const tagInfo of fileCache.tags) {
+					tags.add(tagInfo.tag);
+				}
+			}
+		}
 
 		return Array.from(tags).sort();
 	}
 
-	async scanAll(): Promise<void> {
+	scanAll(): void {
 		this.scanFolders();
-		await this.scanTags();
+		this.scanTags();
 	}
 
 	private collectFolders(folder: TFolder, folderSet: Set<string>): void {
@@ -35,16 +43,6 @@ export class VaultScanner {
 			if (child instanceof TFolder) {
 				this.collectFolders(child, folderSet);
 			}
-		}
-	}
-
-	private async extractTagsFromFile(file: TFile, tagSet: Set<string>): Promise<void> {
-		const content = await this.app.vault.cachedRead(file);
-		const tagRegex = /#([\w\u4e00-\u9fa5-]+)/g;
-		let match: RegExpExecArray | null;
-
-		while ((match = tagRegex.exec(content)) !== null) {
-			tagSet.add(match[1]);
 		}
 	}
 
@@ -58,7 +56,6 @@ export class VaultScanner {
 	}
 
 	getFolderByPath(path: string): TFolder | null {
-		const folder = this.app.vault.getAbstractFileByPath(path);
-		return folder instanceof TFolder ? folder : null;
+		return this.app.vault.getFolderByPath(path);
 	}
 }

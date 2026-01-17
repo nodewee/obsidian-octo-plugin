@@ -19,7 +19,7 @@ export class NoteOrganizer {
 			updatedFile = await this.renameFile(updatedFile, response.title);
 		}
 
-		if (response.path && response.path !== updatedFile.parent?.path) {
+		if (response.path && this.shouldMoveFile(updatedFile, response.path)) {
 			updatedFile = await this.moveFile(updatedFile, response.path);
 		}
 
@@ -28,6 +28,16 @@ export class NoteOrganizer {
 		}
 
 		return updatedFile;
+	}
+
+	private shouldMoveFile(file: TFile, targetPath: string): boolean {
+		const currentPath = this.normalizePath(file.parent?.path || '');
+		const normalizedTargetPath = this.normalizePath(targetPath);
+		return currentPath !== normalizedTargetPath;
+	}
+
+	private normalizePath(path: string): string {
+		return path.replace(/^\//, '').replace(/\/$/, '');
 	}
 
 	private async renameFile(file: TFile, newTitle: string): Promise<TFile> {
@@ -55,15 +65,11 @@ export class NoteOrganizer {
 	}
 
 	private async moveFile(file: TFile, targetPath: string): Promise<TFile> {
-		const normalizedTargetPath = normalizePath(targetPath);
-		const targetFolder = this.app.vault.getAbstractFileByPath(normalizedTargetPath);
+		const obsidianTargetPath = normalizePath(targetPath);
+		const targetFolder = this.app.vault.getFolderByPath(obsidianTargetPath);
 
 		if (!targetFolder) {
-			throw new Error(`Target folder not found: ${normalizedTargetPath}`);
-		}
-
-		if (!(targetFolder instanceof TFolder)) {
-			throw new Error(`Target path is not a folder: ${normalizedTargetPath}`);
+			throw new Error(`Target folder not found: ${obsidianTargetPath}`);
 		}
 
 		const newPath = normalizePath(`${targetFolder.path}/${file.name}`);
@@ -80,57 +86,37 @@ export class NoteOrganizer {
 			throw new Error(`Failed to retrieve moved file: ${newPath}`);
 		}
 
-		new Notice(`Moved to: ${normalizedTargetPath}`);
+		new Notice(`Moved to: ${obsidianTargetPath}`);
 		return movedFile;
 	}
 
 	private async updateTags(file: TFile, tags: string[], content: string): Promise<void> {
-		const existingTags = this.extractTags(content);
+		const existingTags = this.extractTagsFromFile(file);
 		const tagsToAdd = tags.filter(tag => !existingTags.has(tag));
 
 		if (tagsToAdd.length === 0) {
 			return;
 		}
 
-		const tagString = tagsToAdd.map(tag => `#${tag}`).join(' ');
-		const updatedContent = this.insertTags(content, tagString);
+		await this.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+			const currentTags = (frontmatter.tags as string[]) || [];
+			const mergedTags = [...new Set([...currentTags, ...tagsToAdd])];
+			frontmatter.tags = mergedTags;
+		});
 
-		await this.app.vault.modify(file, updatedContent);
 		new Notice(`Added tags: ${tagsToAdd.join(', ')}`);
 	}
 
-	private extractTags(content: string): Set<string> {
-		const tagRegex = /#([\w\u4e00-\u9fa5-]+)/g;
+	private extractTagsFromFile(file: TFile): Set<string> {
 		const tags = new Set<string>();
-		let match: RegExpExecArray | null;
-
-		while ((match = tagRegex.exec(content)) !== null) {
-			tags.add(match[1]);
-		}
-
-		return tags;
-	}
-
-	private insertTags(content: string, tagString: string): string {
-		const lines = content.split('\n');
-		const yamlEndIndex = this.findYamlEndIndex(lines);
-		const insertIndex = yamlEndIndex >= 0 ? yamlEndIndex + 1 : 0;
-
-		lines.splice(insertIndex, 0, '', tagString, '');
-		return lines.join('\n');
-	}
-
-	private findYamlEndIndex(lines: string[]): number {
-		if (lines.length === 0 || !lines[0].trim().startsWith('---')) {
-			return -1;
-		}
-
-		for (let i = 1; i < lines.length; i++) {
-			if (lines[i].trim() === '---') {
-				return i;
+		const fileCache = this.app.metadataCache.getFileCache(file);
+		
+		if (fileCache?.tags) {
+			for (const tagInfo of fileCache.tags) {
+				tags.add(tagInfo.tag);
 			}
 		}
-
-		return -1;
+		
+		return tags;
 	}
 }

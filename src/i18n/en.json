@@ -60,15 +60,11 @@
 			"button": "Reset",
 			"notice": "Custom prompt reset to default"
 		},
-		"cacheStatus": {
-			"title": "Cache Status",
-			"foldersCached": "Folders cached:",
-			"tagsCached": "Tags cached:",
-			"cacheValid": "Cache valid:"
-		},
 		"refreshCache": {
 			"name": "Refresh Cache",
-			"desc": "Manually refresh folder and tag cache",
+			"cacheStatus": "Folders: {folders}, Tags: {tags}, Status: {valid}",
+			"valid": "Valid",
+			"invalid": "Invalid",
 			"button": "Refresh",
 			"notice": "Cache cleared. Will refresh on next operation."
 		},

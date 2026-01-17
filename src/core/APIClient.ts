@@ -98,19 +98,24 @@ export class APIClient {
 		const promptTemplate = this.customPrompt || this.getDefaultPrompt();
 		const filteredFolders = this.formatFolders(context.existingFolders);
 		const topTags = this.formatTags(context.existingTags);
+		const currentPathDisplay = this.formatCurrentPath(context.currentPath);
 
 		return promptTemplate
 			.replace(/\{\{folders\}\}/g, filteredFolders)
 			.replace(/\{\{tags\}\}/g, topTags)
 			.replace(/\{\{currentTitle\}\}/g, context.currentTitle)
-			.replace(/\{\{currentPath\}\}/g, context.currentPath);
+			.replace(/\{\{currentPath\}\}/g, currentPathDisplay);
 	}
 
 	private formatFolders(folders: string[]): string {
 		return folders
-			.filter(f => f !== '/')
+			.filter(f => f !== '/' && f !== '')
 			.map(f => f.replace(/^\//, ''))
 			.join(', ') || '(none)';
+	}
+
+	private formatCurrentPath(currentPath: string): string {
+		return currentPath === '' ? '(root)' : currentPath.replace(/^\//, '');
 	}
 
 	private formatTags(tags: string[]): string {

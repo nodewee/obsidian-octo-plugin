@@ -238,22 +238,19 @@ export class OctoSettingTab extends PluginSettingTab {
 	}
 
 	private renderCacheSection(container: HTMLElement): void {
-		new Setting(container).setHeading();
+		const foldersCount = this.state.getFolderCache().length;
+		const tagsCount = this.state.getTagCache().length;
+		const isValid = this.state.isCacheValid();
 
-		const cacheInfo = container.createDiv({ cls: 'octo-cache-info' });
-
-		const foldersPara = cacheInfo.createEl('p');
-		foldersPara.textContent = `${i18n.t('settings.cacheStatus.foldersCached')} ${this.state.getFolderCache().length}`;
-
-		const tagsPara = cacheInfo.createEl('p');
-		tagsPara.textContent = `${i18n.t('settings.cacheStatus.tagsCached')} ${this.state.getTagCache().length}`;
-
-		const validPara = cacheInfo.createEl('p');
-		validPara.textContent = `${i18n.t('settings.cacheStatus.cacheValid')} ${this.state.isCacheValid() ? 'Yes' : 'No'}`;
+		const cacheStatus = i18n.t('settings.refreshCache.cacheStatus', {
+			folders: foldersCount,
+			tags: tagsCount,
+			valid: isValid ? i18n.t('settings.refreshCache.valid') : i18n.t('settings.refreshCache.invalid')
+		});
 
 		new Setting(container)
 			.setName(i18n.t('settings.refreshCache.name'))
-			.setDesc(i18n.t('settings.refreshCache.desc'))
+			.setDesc(cacheStatus)
 			.addButton(button => button
 				.setButtonText(i18n.t('settings.refreshCache.button'))
 				.setCta()

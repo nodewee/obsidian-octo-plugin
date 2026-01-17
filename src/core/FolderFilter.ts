@@ -4,7 +4,7 @@ export class FolderFilter {
 	private readonly ignoredFolders: Set<string>;
 
 	constructor(ignoredFolders: string[] = []) {
-		this.ignoredFolders = new Set(ignoredFolders);
+		this.ignoredFolders = new Set(ignoredFolders.map(f => f.toLowerCase()));
 	}
 
 	filterFolders(folders: string[]): FolderFilterResult {
@@ -26,12 +26,13 @@ export class FolderFilter {
 	}
 
 	private isFolderIgnored(folder: string): boolean {
-		return this.ignoredFolders.has(folder) || this.isSubfolderOfIgnored(folder);
+		return this.ignoredFolders.has(folder.toLowerCase()) || this.isSubfolderOfIgnored(folder);
 	}
 
 	private isSubfolderOfIgnored(folder: string): boolean {
+		const lowerFolder = folder.toLowerCase();
 		for (const ignoredFolder of this.ignoredFolders) {
-			if (folder.startsWith(`${ignoredFolder}/`)) {
+			if (lowerFolder.startsWith(`${ignoredFolder}/`)) {
 				return true;
 			}
 		}
